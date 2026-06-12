@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ねこポモ — モバイルアプリUI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    html, body { margin: 0; padding: 0; background: #f0eee9; height: 100%; }
+    body { font-family: 'Nunito', system-ui, sans-serif; }
+    * { box-sizing: border-box; }
+  </style>
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+  <div id="root"></div>
+
+  <!-- Component libraries -->
+  <script type="text/babel" src="ios-frame.jsx"></script>
+  <script type="text/babel" src="design-canvas.jsx"></script>
+  <script type="text/babel" src="mugi.jsx"></script>
+  <script type="text/babel" src="room-scene.jsx"></script>
+  <script type="text/babel" src="np-shared.jsx"></script>
+  <script type="text/babel" src="timer-tab.jsx"></script>
+  <script type="text/babel" src="todo-tab.jsx"></script>
+  <script type="text/babel" src="records-screen.jsx"></script>
+  <script type="text/babel" src="settings-screen.jsx"></script>
+  <script type="text/babel" src="nekopomo-app.jsx"></script>
+
+  <script type="text/babel" data-presets="env,react">
+    // Phone frame wrapper for an artboard.
+    function Phone({ children }) {
+      return (
+        <div style={{ padding: 8, display: 'flex', justifyContent: 'center', alignItems: 'center', background: '#F2F2F7', width: '100%', height: '100%' }}>
+          <IOSDevice width={386} height={836}>
+            {children}
+          </IOSDevice>
+        </div>
+      );
+    }
+
+    // Cover card explaining the project.
+    function CoverCard() {
+      return (
+        <div style={{
+          width: '100%', height: '100%',
+          background: `linear-gradient(150deg, ${NP.cream} 0%, ${NP.peach} 100%)`,
+          padding: '40px 36px',
+          display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+          fontFamily: NP.font, color: NP.brown,
+          position: 'relative', overflow: 'hidden',
+        }}>
+          {/* paw watermarks */}
+          <div style={{ position: 'absolute', top: 40, right: 24, opacity: 0.08, transform: 'rotate(20deg)' }}>
+            <PawPrint size={120} color={NP.brown} />
+          </div>
+          <div style={{ position: 'absolute', bottom: 80, left: 30, opacity: 0.06, transform: 'rotate(-12deg)' }}>
+            <PawPrint size={80} color={NP.brown} />
+          </div>
+          <div style={{ position: 'absolute', top: 200, left: 60, opacity: 0.05, transform: 'rotate(45deg)' }}>
+            <PawPrint size={56} color={NP.brown} />
+          </div>
+
+          <div style={{ position: 'relative' }}>
+            <div style={{
+              display: 'inline-block',
+              fontSize: 11, fontWeight: 800, letterSpacing: 2,
+              background: NP.brown, color: NP.cream,
+              padding: '4px 10px', borderRadius: 999,
+              marginBottom: 16,
+            }}>MOBILE APP · iOS / Android</div>
+            <h1 style={{
+              margin: 0, fontSize: 56, fontWeight: 900,
+              letterSpacing: -2, lineHeight: 1, color: NP.brown,
+            }}>ねこポモ</h1>
+            <div style={{
+              fontSize: 18, fontWeight: 700, color: NP.brownMid,
+              marginTop: 8, lineHeight: 1.4,
+            }}>かわいい あいぼうと、<br/>しずかな しゅうちゅう。</div>
+          </div>
+
+          <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'flex-end', flex: 1 }}>
+            <div style={{ position: 'relative' }}>
+              <SpeechBubble text="しずかに よこに いるよ。" style={{ position: 'absolute', top: -10, right: -110 }} />
+              <Mugi mood="calm" size={240} />
+            </div>
+          </div>
+
+          <div style={{
+            display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8,
+            position: 'relative',
+          }}>
+            <Pill icon="⏱" label="ポモドーロ" />
+            <Pill icon="🐾" label="ねこペット" />
+            <Pill icon="✅" label="TODO" />
+          </div>
+        </div>
+      );
+    }
+
+    function Pill({ icon, label }) {
+      return (
+        <div style={{
+          background: 'rgba(255,255,255,0.7)',
+          border: `1.5px solid ${NP.brown}`,
+          borderRadius: 999,
+          padding: '8px 6px',
+          textAlign: 'center',
+          fontSize: 11, fontWeight: 800, color: NP.brown,
+        }}>
+          <span style={{ marginRight: 4 }}>{icon}</span>{label}
+        </div>
+      );
+    }
+
+    // === Pre-baked todo lists for variations ===
+    const TODOS_DEFAULT = [
+      { id: 1, text: 'デザインレビューの準備',  done: false, pomos: 1, goal: 2 },
+      { id: 2, text: '英語の勉強（リスニング）', done: false, pomos: 0, goal: 1 },
+      { id: 3, text: 'メール返信',              done: true,  pomos: 1, goal: 1 },
+      { id: 4, text: '部屋のかたづけ',          done: false, pomos: 0, goal: 2 },
+      { id: 5, text: '本を30ページ読む',        done: false, pomos: 0, goal: 1 },
+    ];
+
+    function App() {
+      return (
+        <DesignCanvas>
+          <DCSection id="overview" title="ねこポモ" subtitle="猫のバーチャルペット × ポモドーロ × TODO  ·  iOS / Android">
+            <DCArtboard id="cover" label="00 · カバー" width={402} height={874}>
+              <CoverCard />
+            </DCArtboard>
+            <DCArtboard id="home-day" label="01 · ホーム（あさ）" width={402} height={874}>
+              <Phone>
+                <NekopomoApp
+                  initialNav="home" initialTab="timer" initialMode="focus"
+                  initialRemaining={25 * 60} initialRunning={false}
+                  timeOfDay="day" mood="calm"
+                  pomosToday={1}
+                />
+              </Phone>
+            </DCArtboard>
+            <DCArtboard id="home-focus" label="02 · 集中中" width={402} height={874}>
+              <Phone>
+                <NekopomoApp
+                  initialNav="home" initialTab="timer" initialMode="focus"
+                  initialRemaining={18 * 60 + 42} initialRunning={true}
+                  timeOfDay="day" mood="focus"
+                  bubble={"しーっ…\nがんばってる！"}
+                  pomosToday={2}
+                />
+              </Phone>
+            </DCArtboard>
+          </DCSection>
+
+          <DCSection id="states" title="むぎのきもち" subtitle="時間帯・モード・状況で猫の表情と空が変わる">
+            <DCArtboard id="break" label="03 · 休憩中（ゆうがた）" width={402} height={874}>
+              <Phone>
+                <NekopomoApp
+                  initialNav="home" initialTab="timer" initialMode="break"
+                  initialRemaining={4 * 60 + 12} initialRunning={true}
+                  timeOfDay="dusk" mood="happy"
+                  bubble={"おつかれさま♡\nおやつ食べる？"}
+                  pomosToday={3}
+                />
+              </Phone>
+            </DCArtboard>
+            <DCArtboard id="night" label="04 · 夜（おやすみ）" width={402} height={874}>
+              <Phone>
+                <NekopomoApp
+                  initialNav="home" initialTab="timer" initialMode="focus"
+                  initialRemaining={25 * 60} initialRunning={false}
+                  timeOfDay="night" mood="sleep"
+                  bubble={"むにゃ…\nおやすみ…"}
+                  pomosToday={4}
+                />
+              </Phone>
+            </DCArtboard>
+            <DCArtboard id="grumpy" label="05 · サボってる時" width={402} height={874}>
+              <Phone>
+                <NekopomoApp
+                  initialNav="home" initialTab="timer" initialMode="focus"
+                  initialRemaining={23 * 60 + 5} initialRunning={false}
+                  timeOfDay="day" mood="grumpy"
+                  bubble={"なに サボってるにゃ？\n…見てるよ。"}
+                  pomosToday={1}
+                />
+              </Phone>
+            </DCArtboard>
+            <DCArtboard id="celebrate" label="06 · ポモ達成！" width={402} height={874}>
+              <Phone>
+                <NekopomoApp
+                  initialNav="home" initialTab="timer" initialMode="longbreak"
+                  initialRemaining={15 * 60} initialRunning={false}
+                  timeOfDay="dusk" mood="wave"
+                  bubble={"4ポモ クリア！\nえらいにゃ〜♪"}
+                  pomosToday={4}
+                />
+              </Phone>
+            </DCArtboard>
+          </DCSection>
+
+          <DCSection id="todos" title="やること" subtitle="TODOタブ — 猫はずっと見守ってくれる">
+            <DCArtboard id="todo-list" label="07 · TODOリスト" width={402} height={874}>
+              <Phone>
+                <NekopomoApp
+                  initialNav="home" initialTab="todo" initialMode="focus"
+                  initialRemaining={25 * 60} initialRunning={false}
+                  timeOfDay="day" mood="calm"
+                  bubble={"きょうも がんばろ〜"}
+                  pomosToday={1}
+                />
+              </Phone>
+            </DCArtboard>
+          </DCSection>
+
+          <DCSection id="other" title="きろく ＆ せってい" subtitle="ボトムナビからアクセスする2つの画面">
+            <DCArtboard id="records" label="08 · きろく" width={402} height={874}>
+              <Phone>
+                <NekopomoApp initialNav="records" />
+              </Phone>
+            </DCArtboard>
+            <DCArtboard id="settings" label="09 · せってい" width={402} height={874}>
+              <Phone>
+                <NekopomoApp initialNav="settings" />
+              </Phone>
+            </DCArtboard>
+          </DCSection>
+
+          <DCPostIt top={80} left={60} rotate={-3} width={200}>
+            タップで操作OK。<br/>
+            ボトムナビ →<br/>
+            タブ切替 →<br/>
+            タイマー＆TODOも 動きます🐾
+          </DCPostIt>
+        </DesignCanvas>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>

@@ -1,8 +1,9 @@
 {
   "expo": {
-    "name": "neko-pomo",
+    "name": "ねこポモ",
     "slug": "neko-pomo",
     "version": "1.0.0",
+    "scheme": "neko-pomo",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -10,21 +11,49 @@
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#FFF8F0"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": false,
+      "bundleIdentifier": "com.msk024.nekopomo"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#FFF8F0"
       },
+      "package": "com.msk024.nekopomo",
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false
     },
     "web": {
-      "favicon": "./assets/favicon.png"
-    }
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro",
+      "output": "static",
+      "themeColor": "#FF85A1",
+      "backgroundColor": "#FFF8F0",
+      "manifest": {
+        "name": "ねこポモ",
+        "short_name": "ねこポモ",
+        "description": "猫と一緒にポモドーロ×TODOで集中しよう",
+        "display": "standalone",
+        "orientation": "portrait",
+        "theme_color": "#FF85A1",
+        "background_color": "#FFF8F0",
+        "lang": "ja",
+        "start_url": "/"
+      }
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#FF85A1"
+        }
+      ]
+    ]
   }
 }
