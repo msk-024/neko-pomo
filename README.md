@@ -45,7 +45,7 @@ npx expo start
 
 ## 📱 デモ
 
-> 🚧 デプロイURL準備中
+**https://neko-pomo.vercel.app**
 
 ---
 
