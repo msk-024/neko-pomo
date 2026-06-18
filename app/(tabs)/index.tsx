@@ -7,6 +7,7 @@ import { TodoList } from '@/components/todo/TodoList';
 import { useTimer } from '@/hooks/useTimer';
 import { useSettingsStore } from '@/stores/settingsStore';
 
+
 type HomeTab = 'timer' | 'todo';
 
 export default function HomeScreen() {
@@ -51,22 +52,20 @@ export default function HomeScreen() {
           <ModeTab mode={mode} onChangeMode={changeMode} />
 
           <View style={styles.timerCard}>
-            <CircleTimer secondsLeft={secondsLeft} totalSeconds={totalSeconds} mode={mode} />
+            <CircleTimer
+              secondsLeft={secondsLeft}
+              totalSeconds={totalSeconds}
+              mode={mode}
+              isRunning={isRunning}
+              onStart={start}
+              onPause={pause}
+            />
           </View>
 
-          <View style={styles.buttonRow}>
-            <TouchableOpacity style={styles.resetButton} onPress={reset}>
-              <Text style={styles.resetButtonText}>↺</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.startButton, isRunning && styles.pauseButton]}
-              onPress={isRunning ? pause : start}
-            >
-              <Text style={styles.startButtonText}>
-                {isRunning ? '⏸ 一時停止' : '▶ スタート'}
-              </Text>
-            </TouchableOpacity>
-          </View>
+          {/* リセットボタンのみ円の外に残す */}
+          <TouchableOpacity style={styles.resetButton} onPress={reset}>
+            <Text style={styles.resetButtonText}>↺ リセット</Text>
+          </TouchableOpacity>
         </ScrollView>
       ) : (
         <View style={styles.todoContent}>
@@ -135,38 +134,17 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     elevation: 4,
   },
-  buttonRow: {
-    flexDirection: 'row',
-    gap: 12,
-    alignItems: 'center',
-  },
-  resetButton: {
-    width: 52,
-    height: 52,
+resetButton: {
+    alignSelf: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
     borderRadius: 16,
     backgroundColor: Colors.creamDk,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   resetButtonText: {
-    fontSize: 24,
+    fontSize: 14,
+    fontWeight: '600',
     color: Colors.brownMid,
-  },
-  startButton: {
-    flex: 1,
-    height: 52,
-    borderRadius: 26,
-    backgroundColor: Colors.pink,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  pauseButton: {
-    backgroundColor: Colors.brownMid,
-  },
-  startButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '700',
   },
   todoContent: { flex: 1 },
 });

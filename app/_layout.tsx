@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Stack, router } from 'expo-router';
+import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
 import { configureNotificationHandler, requestNotificationPermissionAsync } from '@/utils/notifications';
@@ -9,19 +9,13 @@ SplashScreen.preventAutoHideAsync();
 configureNotificationHandler();
 
 export default function RootLayout() {
-  const { _hasHydrated, hasOnboarded } = useSettingsStore();
+  const { _hasHydrated } = useSettingsStore();
 
   useEffect(() => {
-    // ストアの水和が完了するまでスプラッシュを維持する
     if (!_hasHydrated) return;
-
     SplashScreen.hideAsync();
     requestNotificationPermissionAsync();
-
-    if (!hasOnboarded) {
-      router.replace('/onboarding');
-    }
-  }, [_hasHydrated, hasOnboarded]);
+  }, [_hasHydrated]);
 
   return (
     <>

@@ -1,7 +1,8 @@
 import { View, Text, StyleSheet, Platform } from 'react-native';
-import { Tabs } from 'expo-router';
+import { Tabs, Redirect } from 'expo-router';
 import { Colors } from '@/constants/colors';
 import { CatHeader } from '@/components/cat/CatHeader';
+import { useSettingsStore } from '@/stores/settingsStore';
 
 const TAB_ICONS: Record<string, string> = {
   index:    '🏠',
@@ -10,6 +11,13 @@ const TAB_ICONS: Record<string, string> = {
 };
 
 export default function TabLayout() {
+  const { _hasHydrated, hasOnboarded } = useSettingsStore();
+
+  // ハイドレーション完了まで何も表示しない（タブ画面の一瞬表示を防ぐ）
+  if (!_hasHydrated) return null;
+  // 未オンボーディングならリダイレクト（useEffectより先にレンダリング時点で判定）
+  if (!hasOnboarded) return <Redirect href="/onboarding" />;
+
   return (
     // PC表示時：画面中央に最大430pxで収める。モバイルはflex:1のまま
     <View style={styles.outer}>
