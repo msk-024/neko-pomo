@@ -12,11 +12,14 @@ interface TimerState {
   endAt: number | null;
   /** 予約済み終了通知の識別子。未予約またはWebではnull */
   notificationId: string | null;
+  /** 集中タイマー完了後、休憩スタート前の完了状態。永続化しない */
+  justCompleted: boolean;
   setMode: (mode: TimerMode) => void;
   setSecondsLeft: (seconds: number) => void;
   setIsRunning: (running: boolean) => void;
   setEndAt: (endAt: number | null) => void;
   setNotificationId: (notificationId: string | null) => void;
+  setJustCompleted: (v: boolean) => void;
   tick: () => void;
 }
 
@@ -28,11 +31,13 @@ export const useTimerStore = create<TimerState>()(
       isRunning: false,
       endAt: null,
       notificationId: null,
+      justCompleted: false,
       setMode: (mode) => set({ mode }),
       setSecondsLeft: (secondsLeft) => set({ secondsLeft }),
       setIsRunning: (isRunning) => set({ isRunning }),
       setEndAt: (endAt) => set({ endAt }),
       setNotificationId: (notificationId) => set({ notificationId }),
+      setJustCompleted: (justCompleted) => set({ justCompleted }),
       // endAt（終了予定の絶対時刻）から残り秒数を再計算する。
       // バックグラウンド復帰時やアプリ再起動後も正しい残り時間を導けるようにするため、
       // 単純な「1秒減算」ではなく現在時刻との差分で求める。

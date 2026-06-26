@@ -4,8 +4,10 @@ import { Colors } from '@/constants/colors';
 import { CircleTimer } from '@/components/timer/CircleTimer';
 import { ModeTab } from '@/components/timer/ModeTab';
 import { TodoList } from '@/components/todo/TodoList';
+import { CompletionOverlay } from '@/components/timer/CompletionOverlay';
 import { useTimer } from '@/hooks/useTimer';
 import { useSettingsStore } from '@/stores/settingsStore';
+import { useTimerStore } from '@/stores/timerStore';
 
 
 type HomeTab = 'timer' | 'todo';
@@ -14,6 +16,13 @@ export default function HomeScreen() {
   const [activeTab, setActiveTab] = useState<HomeTab>('timer');
   const { start, pause, reset, changeMode, isRunning, secondsLeft, mode } = useTimer();
   const settings = useSettingsStore();
+  const { justCompleted, setJustCompleted, setMode, setSecondsLeft } = useTimerStore();
+
+  function handleStartBreak() {
+    setJustCompleted(false);
+    setMode('break');
+    setSecondsLeft(settings.breakMinutes * 60);
+  }
 
   const totalSeconds =
     mode === 'focus' ? settings.focusMinutes * 60
@@ -22,6 +31,9 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
+      {justCompleted && (
+        <CompletionOverlay catName={settings.catName} onStartBreak={handleStartBreak} />
+      )}
       {/* タイマー ↔ やること タブ */}
       <View style={styles.innerTabRow}>
         <TouchableOpacity

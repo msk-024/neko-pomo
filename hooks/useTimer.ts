@@ -7,6 +7,7 @@ import {
   scheduleTimerEndNotificationAsync,
   cancelTimerNotificationAsync,
 } from '@/utils/notifications';
+import { playCompletionChime, vibrateCompletion } from '@/utils/sound';
 
 function durationSecondsFor(mode: TimerMode, settings: Settings): number {
   if (mode === 'focus') return settings.focusMinutes * 60;
@@ -22,7 +23,7 @@ function durationSecondsFor(mode: TimerMode, settings: Settings): number {
 export function useTimer() {
   const {
     isRunning, secondsLeft, mode, notificationId,
-    tick, setIsRunning, setMode, setSecondsLeft, setEndAt, setNotificationId,
+    tick, setIsRunning, setMode, setSecondsLeft, setEndAt, setNotificationId, setJustCompleted,
   } = useTimerStore();
   const settings = useSettingsStore();
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -57,16 +58,17 @@ export function useTimer() {
     setNotificationId(null);
 
     if (mode === 'focus') {
-      // 集中完了：ポモドーロを記録してから休憩へ
+      // 集中完了：統計を記録してオーバーレイを表示（モード切替はユーザー操作で行う）
       useStatsStore.getState().recordPomo(settings.focusMinutes);
-      setMode('break');
-      setSecondsLeft(settings.breakMinutes * 60);
+      playCompletionChime();
+      vibrateCompletion();
+      setJustCompleted(true);
     } else {
-      // 休憩完了：集中へ戻る
+      // 休憩完了：自動で集中へ戻る（オーバーレイなし）
       setMode('focus');
       setSecondsLeft(settings.focusMinutes * 60);
     }
-  }, [secondsLeft, isRunning, mode, setIsRunning, setMode, setSecondsLeft, setEndAt, setNotificationId, settings]);
+  }, [secondsLeft, isRunning, mode, setIsRunning, setMode, setSecondsLeft, setEndAt, setNotificationId, setJustCompleted, settings]);
 
   async function cancelScheduledNotification() {
     if (!notificationId) return;
