@@ -29,6 +29,7 @@
     "web": {
       "bundler": "metro",
       "output": "static",
+      "favicon": "./public/favicon.png",
       "themeColor": "#FF85A1",
       "backgroundColor": "#FFF8F0",
       "manifest": {
