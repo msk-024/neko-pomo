@@ -1,17 +1,24 @@
-import { useEffect, useRef } from 'react';
-import { AppState } from 'react-native';
-import { useTimerStore, TimerMode } from '@/stores/timerStore';
-import { useSettingsStore, type Settings } from '@/stores/settingsStore';
-import { useStatsStore } from '@/stores/statsStore';
+import { useEffect, useRef } from "react";
+import { AppState } from "react-native";
+import { useTimerStore, TimerMode } from "@/stores/timerStore";
+import { useSettingsStore, type Settings } from "@/stores/settingsStore";
+import { useStatsStore } from "@/stores/statsStore";
 import {
   scheduleTimerEndNotificationAsync,
   cancelTimerNotificationAsync,
-} from '@/utils/notifications';
-import { playCompletionChime, vibrateCompletion } from '@/utils/sound';
+} from "@/utils/notifications";
+import {
+  playCompletionChime,
+  vibrateCompletion,
+  unlockAudio,
+} from "@/utils/sound";
 
-function durationSecondsFor(mode: TimerMode, settings: Settings): number {
-  if (mode === 'focus') return settings.focusMinutes * 60;
-  if (mode === 'break') return settings.breakMinutes * 60;
+export function durationSecondsFor(
+  mode: TimerMode,
+  settings: Settings,
+): number {
+  if (mode === "focus") return settings.focusMinutes * 60;
+  if (mode === "break") return settings.breakMinutes * 60;
   return settings.longBreakMinutes * 60;
 }
 
@@ -22,8 +29,17 @@ function durationSecondsFor(mode: TimerMode, settings: Settings): number {
  */
 export function useTimer() {
   const {
-    isRunning, secondsLeft, mode, notificationId,
-    tick, setIsRunning, setMode, setSecondsLeft, setEndAt, setNotificationId, setJustCompleted,
+    isRunning,
+    secondsLeft,
+    mode,
+    notificationId,
+    tick,
+    setIsRunning,
+    setMode,
+    setSecondsLeft,
+    setEndAt,
+    setNotificationId,
+    setCompletedMode,
   } = useTimerStore();
   const settings = useSettingsStore();
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -44,8 +60,8 @@ export function useTimer() {
 
   // バックグラウンドから復帰した瞬間にも再計算する（バックグラウンド中はintervalが止まるため）
   useEffect(() => {
-    const subscription = AppState.addEventListener('change', (nextState) => {
-      if (nextState === 'active' && isRunning) tick();
+    const subscription = AppState.addEventListener("change", (nextState) => {
+      if (nextState === "active" && isRunning) tick();
     });
     return () => subscription.remove();
   }, [isRunning, tick]);
@@ -57,18 +73,23 @@ export function useTimer() {
     setEndAt(null);
     setNotificationId(null);
 
-    if (mode === 'focus') {
-      // 集中完了：統計を記録してオーバーレイを表示（モード切替はユーザー操作で行う）
+    // 集中・休憩どちらも完了オーバーレイで知らせる（モード切替はユーザー操作で行う）
+    if (mode === "focus") {
       useStatsStore.getState().recordPomo(settings.focusMinutes);
-      playCompletionChime();
-      vibrateCompletion();
-      setJustCompleted(true);
-    } else {
-      // 休憩完了：自動で集中へ戻る（オーバーレイなし）
-      setMode('focus');
-      setSecondsLeft(settings.focusMinutes * 60);
     }
-  }, [secondsLeft, isRunning, mode, setIsRunning, setMode, setSecondsLeft, setEndAt, setNotificationId, setJustCompleted, settings]);
+    playCompletionChime();
+    vibrateCompletion();
+    setCompletedMode(mode);
+  }, [
+    secondsLeft,
+    isRunning,
+    mode,
+    setIsRunning,
+    setEndAt,
+    setNotificationId,
+    setCompletedMode,
+    settings,
+  ]);
 
   async function cancelScheduledNotification() {
     if (!notificationId) return;
@@ -77,12 +98,19 @@ export function useTimer() {
   }
 
   async function start() {
+    // ユーザー操作中に自動再生制限を解除しておく（完了チャイムを確実に鳴らすため）
+    unlockAudio();
+
     const endTimestamp = Date.now() + secondsLeft * 1000;
     setEndAt(endTimestamp);
     setIsRunning(true);
 
     if (settings.notificationEnabled) {
-      const id = await scheduleTimerEndNotificationAsync(endTimestamp, mode, settings.catName);
+      const id = await scheduleTimerEndNotificationAsync(
+        endTimestamp,
+        mode,
+        settings.catName,
+      );
       setNotificationId(id);
     }
   }

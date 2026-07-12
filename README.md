@@ -13,19 +13,21 @@
 - 🎨 **猫の毛色選択** — 茶トラ・黒猫・三毛猫の3種類
 - 🌅 **時間帯連動背景** — 朝・昼・夜で背景が自動で切り替わる
 - 📱 **PWA対応** — ブラウザからホーム画面に追加可能
+- 🔔 **完了に気づける** — 完了オーバーレイ＋チャイム。Webはタブタイトルに残り時間と完了通知を表示
+- 💡 **画面スリープ防止** — タイマー実行中は画面が消えない（Web・Wake Lock API）
 
 ---
 
 ## 🛠 技術スタック
 
-| 役割 | 技術 |
-|------|------|
+| 役割           | 技術                            |
+| -------------- | ------------------------------- |
 | フレームワーク | Expo SDK 54 / React Native 0.81 |
-| 言語 | TypeScript (strict mode) |
-| ナビゲーション | expo-router v6 |
-| 状態管理 | Zustand v5 + AsyncStorage |
-| アニメーション | react-native-reanimated v4 |
-| デプロイ | Vercel (static export) |
+| 言語           | TypeScript (strict mode)        |
+| ナビゲーション | expo-router v6                  |
+| 状態管理       | Zustand v5 + AsyncStorage       |
+| アニメーション | react-native-reanimated v4      |
+| デプロイ       | Vercel (static export)          |
 
 ---
 
@@ -46,6 +48,32 @@ npx expo start
 ## 📱 デモ
 
 **https://neko-pomo.vercel.app**
+
+---
+
+## ⚠️ 既知の制限（Web版の音・通知）
+
+Web版では完了音・通知に以下の制限がある（2026-06-26 の通知機能実装、2026-07-10 の緩和策実装時点の結論）。
+
+| 状況                       | 音・通知                                                                   |
+| -------------------------- | -------------------------------------------------------------------------- |
+| タブを開いて画面を見ている | ✅ チャイムが鳴る（Web Audio API・`utils/sound.ts`）＋完了オーバーレイ表示 |
+| 別タブ・別アプリを見ている | ⚠️ 音は鳴らないことがあるが、タブタイトルが「🍅 集中おわったよ！」に変わる |
+| 画面ロック・タブを閉じた   | ❌ 鳴らない・通知も出ない                                                  |
+
+**理由と緩和策:**
+
+- `expo-notifications` は Web 未対応のため、`utils/notifications.ts` は Web では何もしない設計（全関数が early return）
+- iOS Safari には自動再生制限がある → **緩和策:** スタートボタン押下時に `unlockAudio()` で AudioContext を resume しておき、完了チャイムが制限にかからないようにしている（それでも失敗した場合は黙って無視する）
+- タイマー自体は終了予定時刻（endAt）方式なので、バックグラウンドでも時間は狂わない（復帰時に再計算）
+- 実行中はタブタイトルに残り時間（🍅 24:15）を表示し、完了時は完了メッセージに変わる（`hooks/useTabTitle.ts`）
+- 実行中は Wake Lock API で画面の自動スリープを抑止する（`hooks/useScreenWakeLock.ts`・非対応ブラウザでは単に効かないだけ）
+- 補完として Android Chrome ではバイブレーションも動く
+
+**将来のiOSネイティブ移行時:**
+
+`utils/notifications.ts` に終了時刻ちょうどに届く通知予約（`scheduleTimerEndNotificationAsync`・音付き）が**実装済み**。
+EAS Build でネイティブアプリ化すれば、画面ロック中でも音付き通知が届くようになる。コード変更はほぼ不要。
 
 ---
 

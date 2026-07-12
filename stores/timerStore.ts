@@ -1,8 +1,8 @@
-import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
-import { asyncStorageAdapter, STORAGE_KEYS } from '@/utils/storage';
+import { create } from "zustand";
+import { persist, createJSONStorage } from "zustand/middleware";
+import { asyncStorageAdapter, STORAGE_KEYS } from "@/utils/storage";
 
-export type TimerMode = 'focus' | 'break' | 'longBreak';
+export type TimerMode = "focus" | "break" | "longBreak";
 
 interface TimerState {
   mode: TimerMode;
@@ -12,39 +12,42 @@ interface TimerState {
   endAt: number | null;
   /** 予約済み終了通知の識別子。未予約またはWebではnull */
   notificationId: string | null;
-  /** 集中タイマー完了後、休憩スタート前の完了状態。永続化しない */
-  justCompleted: boolean;
+  /** 直前に完了したタイマーのモード。オーバーレイ表示中のみ値を持つ。リロード後もオーバーレイを復元できるよう永続化する */
+  completedMode: TimerMode | null;
   setMode: (mode: TimerMode) => void;
   setSecondsLeft: (seconds: number) => void;
   setIsRunning: (running: boolean) => void;
   setEndAt: (endAt: number | null) => void;
   setNotificationId: (notificationId: string | null) => void;
-  setJustCompleted: (v: boolean) => void;
+  setCompletedMode: (mode: TimerMode | null) => void;
   tick: () => void;
 }
 
 export const useTimerStore = create<TimerState>()(
   persist(
     (set) => ({
-      mode: 'focus',
+      mode: "focus",
       secondsLeft: 25 * 60,
       isRunning: false,
       endAt: null,
       notificationId: null,
-      justCompleted: false,
+      completedMode: null,
       setMode: (mode) => set({ mode }),
       setSecondsLeft: (secondsLeft) => set({ secondsLeft }),
       setIsRunning: (isRunning) => set({ isRunning }),
       setEndAt: (endAt) => set({ endAt }),
       setNotificationId: (notificationId) => set({ notificationId }),
-      setJustCompleted: (justCompleted) => set({ justCompleted }),
+      setCompletedMode: (completedMode) => set({ completedMode }),
       // endAt（終了予定の絶対時刻）から残り秒数を再計算する。
       // バックグラウンド復帰時やアプリ再起動後も正しい残り時間を導けるようにするため、
       // 単純な「1秒減算」ではなく現在時刻との差分で求める。
       tick: () =>
         set((state) => {
           if (state.endAt == null) return state;
-          const secondsLeft = Math.max(0, Math.round((state.endAt - Date.now()) / 1000));
+          const secondsLeft = Math.max(
+            0,
+            Math.round((state.endAt - Date.now()) / 1000),
+          );
           return { secondsLeft };
         }),
     }),
@@ -58,7 +61,9 @@ export const useTimerStore = create<TimerState>()(
         isRunning: state.isRunning,
         endAt: state.endAt,
         notificationId: state.notificationId,
+        // 完了オーバーレイ表示待ちのままリロードされても復元できるように保存する
+        completedMode: state.completedMode,
       }),
-    }
-  )
+    },
+  ),
 );
